@@ -37,10 +37,10 @@ TEST(Bin_image_segmentation, empty_space_small) {
 TEST(Bin_image_segmentation, empty_space_large) {
   std::size_t w = 99;
   std::size_t h = 100;
-  std::vector<std::size_t> vec = Generate_pic(w, h);  // 999*1000
+  std::vector<std::size_t> vec = Generate_pic(w, h);
   std::vector<std::size_t> res = Process(vec, w, h);
   bool eq = 1;
-  for (size_t i = 0; i < 9900; i++) {
+  for (size_t i = 0; i < w * h; i++) {
     if ((vec[i] == 0 || res[i] == 0) && (vec[i] != res[i])) {
       eq = 0;
       break;
@@ -50,7 +50,7 @@ TEST(Bin_image_segmentation, empty_space_large) {
 }
 
 TEST(Bin_image_segmentation, correctness_square) {
-  std::size_t w = 20;
+  std::size_t w = 80;
   std::vector<std::size_t> vec = Generate_pic(w, w);
   std::vector<std::size_t> res = Process(vec, w, w);
   bool corr = 1;
@@ -72,14 +72,12 @@ TEST(Bin_image_segmentation, correctness_square) {
       }
     }
   }
-  if (corr == false)
-    Output(res, w);
   ASSERT_EQ(true, corr);
 }
 
 TEST(Bin_image_segmentation, correctness_rectangle) {
-  std::size_t w = 30;
-  std::size_t h = 20;
+  std::size_t w = 50;
+  std::size_t h = 80;
   std::vector<std::size_t> vec = Generate_pic(w, h);
   std::vector<std::size_t> res = Process(vec, w, h);
   bool corr = 1;
@@ -101,8 +99,6 @@ TEST(Bin_image_segmentation, correctness_rectangle) {
       }
     }
   }
-  if (corr == false)
-    Output(res, w);
   ASSERT_EQ(true, corr);
 }
 

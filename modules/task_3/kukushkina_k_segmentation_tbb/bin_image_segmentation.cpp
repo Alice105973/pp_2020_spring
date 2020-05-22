@@ -58,52 +58,84 @@ std::vector<std::size_t> Generate_pic(std::size_t w, std::size_t h) {
 }
 
 std::vector<std::size_t> Process(const std::vector<std::size_t>& source, std::size_t w, std::size_t h) {
+  std::size_t grain = 100;
+  std::vector<std::size_t> tnc;
+  tnc.push_back(0);
+  tnc.push_back(1);
   tbb::task_scheduler_init init(tbb::task_scheduler_init::automatic);
   std::vector<std::size_t> res(source);
-  std::size_t color = 2;
-  Segmentation pic(&res, w, h, &color);
-  tbb::parallel_for(tbb::blocked_range<std::size_t>(0, h), pic);
-  std::vector<std::size_t> tnc(color + 1);
-  std::iota(tnc.begin(), tnc.end(), 0);
+  std::size_t color = 1;
+  Segmentation pic(&res, w, h, &color, &tnc);
+  tbb::parallel_for(tbb::blocked_range<std::size_t>(0, h, grain), pic);
+
   for (std::size_t i = w; i < res.size(); i++) {
     if (res[i] == 0 || res[i - w] == 0)
       continue;
-    std::size_t cur = res[i];
+    std::size_t cur = tnc[res[i]];
     std::size_t up = tnc[res[i - w]];
-    for (std::size_t j = 0; j < tnc.size(); j++) {
-      if (tnc[j] == tnc[cur])
-        tnc[j] = tnc[up];
+    for (std::size_t j = 2; j < tnc.size(); j++) {
+      if (tnc[j] == cur)
+        tnc[j] = up;
     }
   }
+
   Recolor rec(&res, w, tnc);
-  tbb::parallel_for(tbb::blocked_range<std::size_t>(0, h), rec);
+  tbb::parallel_for(tbb::blocked_range<std::size_t>(0, h, grain), rec);
   init.terminate();
   return res;
 }
 
 void Segmentation::operator() (const tbb::blocked_range<std::size_t>& r) const {
   tbb::spin_mutex::scoped_lock lock;
+  tbb::spin_mutex::scoped_lock lock1;
   size_t begin = w * r.begin();
   size_t end = w * r.end();
 
-  if ((*result)[begin] == 1) {
+  if ((*result)[begin] == 1) {  // first elem
     lock.acquire(mut_new_seg);
     (*color)++;
     (*result)[begin] = *color;
+    newColor->push_back(*color);
     lock.release();
   }
 
-  for (std::size_t i = begin + 1; i < end; i++) {
-    if ((*result)[i] == 0)
+  for (std::size_t i = begin + 1; i < begin + w; i++) {  // first row
+    if ((*result)[i] == 0)  // empty cell
       continue;
-    if ((*result)[i - 1] == 0 || i % w == 0) {
+    if ((*result)[i - 1] == 0 || i % w == 0) {  // new seg
       lock.acquire(mut_new_seg);
       (*color)++;
       (*result)[i] = *color;
+      newColor->push_back(*color);
       lock.release();
       continue;
     }
     (*result)[i] = (*result)[i - 1];
+  }
+
+  for (std::size_t i = begin + w; i < end; i++) {  // other rows
+    if ((*result)[i] == 0)  // empty cell
+      continue;
+    if ((*result)[i - 1] == 0 && (*result)[i - w] == 0 || i % w == 0) {  // new seg
+      lock.acquire(mut_new_seg);
+      (*color)++;
+      (*result)[i] = *color;
+      newColor->push_back(*color);
+      lock.release();
+      continue;
+    }
+    if ((*result)[i - 1] == 0) {  // only upper is colored
+      (*result)[i] = (*result)[i - w];
+      continue;
+    }
+    if ((*result)[i - w] == 0) {  // only left is colored
+      (*result)[i] = (*result)[i - 1];
+      continue;
+    }
+    // both upper & left are colored
+    std::size_t upcolor = (*result)[i - w];
+    std::size_t leftcolor = (*result)[i - 1];
+    (*result)[i] = leftcolor;
   }
 }
 
