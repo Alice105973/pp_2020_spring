@@ -19,7 +19,7 @@ class Segmentation {
  public:
   Segmentation(std::vector<std::size_t>* tresult,
     std::size_t tw, std::size_t th, std::size_t* tcolor,
-	std::vector<std::size_t>* tnc) :
+    std::vector<std::size_t>* tnc) :
     result(tresult), w(tw), color(tcolor), newColor(tnc) {}
 
   void operator() (const tbb::blocked_range<std::size_t>& r) const;
