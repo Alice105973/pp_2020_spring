@@ -58,11 +58,10 @@ std::vector<std::size_t> Generate_pic(std::size_t w, std::size_t h) {
 }
 
 std::vector<std::size_t> Process(const std::vector<std::size_t>& source, std::size_t w, std::size_t h) {
-  std::size_t grain = 100;
+  tbb::task_scheduler_init init(tbb::task_scheduler_init::automatic);std::size_t grain = 100;
   std::vector<std::size_t> tnc;
   tnc.push_back(0);
   tnc.push_back(1);
-  tbb::task_scheduler_init init(tbb::task_scheduler_init::automatic);
   std::vector<std::size_t> res(source);
   std::size_t color = 1;
   Segmentation pic(&res, w, h, &color, &tnc);
