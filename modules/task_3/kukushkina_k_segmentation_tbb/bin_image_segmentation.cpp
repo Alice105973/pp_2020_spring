@@ -116,7 +116,7 @@ void Segmentation::operator() (const tbb::blocked_range<std::size_t>& r) const {
   for (std::size_t i = begin + w; i < end; i++) {  // other rows
     if ((*result)[i] == 0)  // empty cell
       continue;
-    if ((*result)[i - 1] == 0 && (*result)[i - w] == 0 || i % w == 0) {  // new seg
+    if (((*result)[i - 1] == 0 && (*result)[i - w] == 0) || i % w == 0) {  // new seg
       lock.acquire(mut_new_seg);
       (*color)++;
       (*result)[i] = *color;
@@ -133,7 +133,6 @@ void Segmentation::operator() (const tbb::blocked_range<std::size_t>& r) const {
       continue;
     }
     // both upper & left are colored
-    std::size_t upcolor = (*result)[i - w];
     std::size_t leftcolor = (*result)[i - 1];
     (*result)[i] = leftcolor;
   }
