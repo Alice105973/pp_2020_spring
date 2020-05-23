@@ -57,6 +57,32 @@ std::vector<std::size_t> Generate_pic(std::size_t w, std::size_t h) {
   return pic;
 }
 
+class Segmentation {
+  std::vector<std::size_t>* result;
+  std::size_t w;
+  std::size_t* color;
+  std::vector<std::size_t>* newColor;
+ public:
+  Segmentation(std::vector<std::size_t>* tresult,
+    std::size_t tw, std::size_t th, std::size_t* tcolor,
+    std::vector<std::size_t>* tnc) :
+    result(tresult), w(tw), color(tcolor), newColor(tnc) {}
+
+  void operator() (const tbb::blocked_range<std::size_t>& r) const;
+};
+
+class Recolor {
+  std::vector<std::size_t>* result;
+  std::size_t w;
+  const std::vector<std::size_t>& newColor;
+ public:
+  Recolor(std::vector<std::size_t>* tresult, std::size_t tw,
+    const std::vector<std::size_t>& tnc) :
+    result(tresult), w(tw), newColor(tnc) {}
+
+  void operator() (const tbb::blocked_range<std::size_t>& r) const;
+};
+
 std::vector<std::size_t> Process(const std::vector<std::size_t>& source, std::size_t w, std::size_t h) {
   tbb::task_scheduler_init init(tbb::task_scheduler_init::automatic);
   std::size_t grain = 100;
