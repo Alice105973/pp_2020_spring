@@ -83,34 +83,6 @@ class Recolor {
   void operator() (const tbb::blocked_range<std::size_t>& r) const;
 };
 
-std::vector<std::size_t> Process(const std::vector<std::size_t>& source, std::size_t w, std::size_t h) {
-  tbb::task_scheduler_init init(tbb::task_scheduler_init::automatic);
-  std::size_t grain = 100;
-  std::vector<std::size_t> tnc;
-  tnc.push_back(0);
-  tnc.push_back(1);
-  std::vector<std::size_t> res(source);
-  std::size_t color = 1;
-  Segmentation pic(&res, w, h, &color, &tnc);
-  tbb::parallel_for(tbb::blocked_range<std::size_t>(0, h, grain), pic);
-
-  for (std::size_t i = w; i < res.size(); i++) {
-    if (res[i] == 0 || res[i - w] == 0)
-      continue;
-    std::size_t cur = tnc[res[i]];
-    std::size_t up = tnc[res[i - w]];
-    for (std::size_t j = 2; j < tnc.size(); j++) {
-      if (tnc[j] == cur)
-        tnc[j] = up;
-    }
-  }
-
-  Recolor rec(&res, w, tnc);
-  tbb::parallel_for(tbb::blocked_range<std::size_t>(0, h, grain), rec);
-  init.terminate();
-  return res;
-}
-
 void Segmentation::operator() (const tbb::blocked_range<std::size_t>& r) const {
   tbb::spin_mutex::scoped_lock lock;
   tbb::spin_mutex::scoped_lock lock1;
@@ -169,6 +141,51 @@ void Recolor::operator() (const tbb::blocked_range<std::size_t>& r) const {
   std::size_t end = w * r.end();
   for (std::size_t i = begin; i < end; i++)
     (*result)[i] = newColor[(*result)[i]];
+}
+
+
+std::vector<std::size_t> Process(const std::vector<std::size_t>& source, std::size_t w, std::size_t h) {
+  tbb::task_scheduler_init init(tbb::task_scheduler_init::automatic);
+  std::size_t grain = 100;
+  std::vector<std::size_t> tnc;
+  tnc.push_back(0);
+  tnc.push_back(1);
+  std::vector<std::size_t> res(source);
+  std::size_t color = 1;
+
+  std::cout << "Start\n";
+
+  Segmentation pic(&res, w, h, &color, &tnc);
+
+  std::cout << "Segmentation start\n";
+
+  tbb::parallel_for(tbb::blocked_range<std::size_t>(0, h, grain), pic);
+
+  std::cout << "Segmentation end\n";
+
+  for (std::size_t i = w; i < res.size(); i++) {
+    if (res[i] == 0 || res[i - w] == 0)
+      continue;
+    std::size_t cur = tnc[res[i]];
+    std::size_t up = tnc[res[i - w]];
+    for (std::size_t j = 2; j < tnc.size(); j++) {
+      if (tnc[j] == cur)
+        tnc[j] = up;
+    }
+  }
+
+  std::cout << "Preprocessing end\n";
+
+  Recolor rec(&res, w, tnc);
+  tbb::parallel_for(tbb::blocked_range<std::size_t>(0, h, grain), rec);
+
+  std::cout << "Recoloring end\n";
+
+  init.terminate();
+
+  std::cout << "End\n";
+
+  return res;
 }
 
 void Output(const std::vector<std::size_t>& source, std::size_t w) {
