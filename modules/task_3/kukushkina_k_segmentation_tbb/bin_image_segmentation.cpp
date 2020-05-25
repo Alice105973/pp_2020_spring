@@ -145,22 +145,14 @@ void Recolor::operator() (const tbb::blocked_range<std::size_t>& r) const {
 
 
 std::vector<std::size_t> Process(const std::vector<std::size_t>& source, std::size_t w, std::size_t h) {
-  std::cout << "Start\n";
   tbb::task_scheduler_init init(tbb::task_scheduler_init::automatic);
-  std::cout << "Init\n";
   std::size_t grain = 100;
-  std::cout << "Grain\n";
   std::vector<std::size_t> tnc;
-  std::cout << "new vec\n";
   tnc.push_back(0);
-  std::cout << "pushback 0\n";
   tnc.push_back(1);
-  std::cout << "pushback 1\n";
   std::vector<std::size_t> res(source);
-  std::cout << "new res copy\n";
   std::size_t color = 1;
   Segmentation pic(&res, w, h, &color, &tnc);
-  std::cout << "new segmentation\n";
   tbb::parallel_for(tbb::blocked_range<std::size_t>(0, h, grain), pic);
   for (std::size_t i = w; i < res.size(); i++) {
     if (res[i] == 0 || res[i - w] == 0)
