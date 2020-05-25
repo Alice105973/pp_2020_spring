@@ -20,11 +20,14 @@ TEST(Bin_image_segmentation, image_dim) {
 }
 
 TEST(Bin_image_segmentation, empty_space_small) {
+  std::cout << "Start\n";
   std::size_t h = 30;
   std::size_t w = 20;
+  std::cout << "Init\n";
   std::vector<std::size_t> vec = Generate_pic(w, h);
-  Output(vec, w);
+  std::cout << "Generate\n";
   std::vector<std::size_t> res = Process(vec, w, h);
+  std::cout << "Process\n";
   bool eq = 1;
   for (size_t i = 0; i < 25; i++) {
     if ((vec[i] == 0 || res[i] == 0) && (vec[i] != res[i])) {
@@ -36,11 +39,14 @@ TEST(Bin_image_segmentation, empty_space_small) {
 }
 
 TEST(Bin_image_segmentation, empty_space_large) {
+  std::cout << "Start\n";
   std::size_t w = 99;
   std::size_t h = 100;
+  std::cout << "Init\n";
   std::vector<std::size_t> vec = Generate_pic(w, h);
-  Output(vec, w);
+  std::cout << "Generate\n";
   std::vector<std::size_t> res = Process(vec, w, h);
+  std::cout << "Process\n";
   bool eq = 1;
   for (size_t i = 0; i < w * h; i++) {
     if ((vec[i] == 0 || res[i] == 0) && (vec[i] != res[i])) {
@@ -52,10 +58,13 @@ TEST(Bin_image_segmentation, empty_space_large) {
 }
 
 TEST(Bin_image_segmentation, correctness_square) {
+  std::cout << "Start\n";
   std::size_t w = 80;
+  std::cout << "Init\n";
   std::vector<std::size_t> vec = Generate_pic(w, w);
-  Output(vec, w);
+  std::cout << "Generate\n";
   std::vector<std::size_t> res = Process(vec, w, w);
+  std::cout << "Process\n";
   bool corr = 1;
   for (size_t i = w; i < w * w - w; i++) {
     if (res[i] == 0) continue;
@@ -79,11 +88,14 @@ TEST(Bin_image_segmentation, correctness_square) {
 }
 
 TEST(Bin_image_segmentation, correctness_rectangle) {
+  std::cout << "Start\n";
   std::size_t w = 50;
   std::size_t h = 80;
+  std::cout << "Init\n";
   std::vector<std::size_t> vec = Generate_pic(w, h);
-  Output(vec, w);
+  std::cout << "Generate\n";
   std::vector<std::size_t> res = Process(vec, w, h);
+  std::cout << "Process\n";
   bool corr = 1;
   for (std::size_t i = w + 1; i < h * w - w - 1; i++) {
     if (res[i] == 0) continue;
